@@ -69,6 +69,7 @@ export default {
   }
   .nameFont{
     margin-left: 10px;
+    font-size: 18px;
   }
   .fontContainer{
     height: 40px;
