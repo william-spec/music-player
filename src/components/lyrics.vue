@@ -1,14 +1,13 @@
 <template>
-  <div class="lyricsContainer">
+  <div class="lyricsContainer" ref="a">
     <div class="center" v-show="touchmove" >
-      <van-icon name="play" @click="changeTime"/>
+      <van-icon name="play" class="name" @click="changeTime"/>
       <div class="centerLine"></div>
-      <div >{{touchMoveTime}}</div>
+      <div class="time">{{touchMoveTime}}</div>
     </div>
-    
-    <div class='lyricsWordsContainer' ref="a">
-      <p v-for="(value, index) in lyricsWords" :key="index" :class="{active: index === nIndex}" class="p">{{value}}</p>
-    </div>
+    <div class="blank"></div>
+    <p v-for="(value, index) in lyricsWords" :key="index" :class="{active: index === nIndex}" class="p">{{value}}</p>
+    <div class="blank"></div>
   </div>
 </template>
 
@@ -21,16 +20,17 @@ export default {
   props: ['id', 'currentTime'],
   setup(props){
     let {proxy} =getCurrentInstance();
-    let lyrics = reactive({});
-    let lyricsTimes = reactive([]);
-    let lyricsWords = reactive([]);
+    let lyrics = reactive({});    //键为时间，值为歌词
+    let lyricsTimes = reactive([]);   //只保存时间
+    let lyricsWords = reactive([]);   //只保存歌词
     let lyricsTop = reactive([]);   //每句歌词对应的位置，第一句歌词从下标为1开始
-    let lyricsTopComputedTimes = ref(0);
+    let lyricsTopComputedTimes = ref(0);  //表示歌词位置的计算次数，只需要计算一次
     let nIndex = ref();   //当前歌词索引
-    let touchmove = ref(false);
-    let touchMoveTime = ref()
+    let touchmove = ref(false);   //表示是否处于滑动状态
+    let touchMoveTime = ref()   //滑动位置所对应的时间
     let touchMoveLyricsIndex = ref()   //滑动到的那句歌词的索引
     let timer = reactive([])    //存放计时器，touchend时延迟取消显示使用到计时器，如果此时又进行拖动，就需要取消计时器
+    //解析歌词
     getLyrics(props.id).then(res => {
       let str = res.data.lrc.lyric;
       let t = str.split('\n');
@@ -48,12 +48,12 @@ export default {
         lyricsTimes.push(res);
       })
     })
-    let getLyricsTop = () => {
-      lyricsTopComputedTimes.value ++;
+    //计算歌词高度，滚动距离由当前句歌词和上一句歌词的高度决定
+    let getLyricsScrollTop = () => {
+      lyricsTopComputedTimes.value ++;  //记录歌词位置的计算次数，只需要计算一次即可，否则onUpdated中会重复计算
       let arr = document.querySelectorAll('.p');
-      let preTop = getComputedStyle(proxy.$refs.a,null).top    //初始位置，位于容器中央
-      let preTopN = Number(preTop.substring(0, preTop.length - 2))   //将当前距离顶部位置转换成数字 
-      lyricsTop.push(preTop);    //下标为0的位置存储初始位置
+      let preScrollTop = 0    //初始位置，滚动高度为0
+      lyricsTop.push(preScrollTop);    //下标为0的位置存储初始位置
       arr.forEach((i, index) => {
           let preP;   //前一句歌词
           let nowP = arr[index]     //获取本句歌词
@@ -66,19 +66,19 @@ export default {
             margin = margin * 2;    //获取歌词外边距，如果有前一句歌词则为两倍外边距
           }
           let res = prePHeight / 2 + nowPHeight / 2 + margin    //计算移动距离
-          let newTop = preTopN - res + 'px';    //操作DOM滚动歌词
-          preTopN = Number(newTop.substring(0, newTop.length - 2));
-          lyricsTop.push(newTop);
+          let newScrollTop = preScrollTop + res;    //操作DOM滚动歌词
+          lyricsTop.push(newScrollTop);
+          preScrollTop = newScrollTop;
       })
     }
-    watch(() => props.currentTime, (newValue, oldValue) => {
-      if(newValue - oldValue > 2) return;  //如果是滑动跳转时间的（间隔大于2s）就停止监视这一次
+    watch(() => props.currentTime, () => {
+      if(touchmove.value) return;   //如果在播放时进行滑动，那么暂停对时间的监视
       //监听时间，使歌词滚动
       //此处可以优化，  当前已经记录下了当前歌词的索引，下次只要判断当前索引的下一句即可，不用全部遍历
       lyricsTimes.forEach((i, index) => {
-        if(i <= props.currentTime && lyricsTimes[index + 1]>props.currentTime){
+        if(i <= props.currentTime && (lyricsTimes[index + 1]>props.currentTime || index + 1 === lyricsTimes.length /* 如果是最后一句歌词 */)){
           if(nIndex.value === index) return;    //如果该句歌词和上一句歌词一样则返回
-          proxy.$refs.a.style.top = lyricsTop[index + 1];
+          proxy.$refs.a.scrollTop = lyricsTop[index + 1];
           nIndex.value = index    //更新当前歌词索引
         }
       })
@@ -86,7 +86,7 @@ export default {
     onMounted(() => {
       //歌词拖动
       proxy.$refs.a.addEventListener('touchmove', throttle(100, () => {   //使用节流节省性能
-        console.log(proxy.$refs.a.style.top);
+        //如果拖动时存在未执行的定时器，那么清除他们
         if(timer.length !== 0){
           timer.forEach(i => {
             clearTimeout(i)
@@ -94,6 +94,7 @@ export default {
           timer.length = 0;
         }
         touchmove.value = true
+        //计算当前scrollTop对应的歌词
         let arr = document.querySelectorAll('.p');
         let lineY = document.querySelector('.centerLine').getBoundingClientRect().y;
         let pY = [];
@@ -102,10 +103,10 @@ export default {
           if(pY[index] <= lineY && pY[index+1] > lineY){
             touchMoveTime.value = secToMinSec(lyricsTimes[index]);
             touchMoveLyricsIndex.value = index + 1;
-            console.log(`滑动到${lyricsWords[index]},其位置为${lyricsTop[touchMoveLyricsIndex.value]}`);
           }
         })
       }));
+      //滑动事件结束时，启动定时器延时隐藏元素
       proxy.$refs.a.addEventListener('touchend', () => {
         timer.push(setTimeout(() => {
           touchmove.value = false
@@ -114,14 +115,12 @@ export default {
       });
     })
     onUpdated(() => {
-      if(lyricsTopComputedTimes.value === 0)
-        getLyricsTop();
+      if(lyricsTopComputedTimes.value === 0)    //初次渲染时计算歌词的位置
+        getLyricsScrollTop();
     })
     let changeTime = () => {
       proxy.$emit('changeTime', touchMoveTime.value)
       touchmove.value = false;
-      proxy.$refs.a.style.top = lyricsTop[touchMoveLyricsIndex.value]
-      console.log(proxy.$refs.a.style.top);
     }
     return {
       lyrics,
@@ -135,18 +134,27 @@ export default {
 }
 /* 
 歌词滚动组件
-  歌词滚动：
-    1、监听audio元素上的timeupdate事件，实时获取当前时间
-    2、v-for遍历歌词，歌词首次onUpdated的时候计算出每句歌词对应的Top滚动距离，放在数组中
-    3、监听当前时间并与每句歌词对应的时间进行对比，使用JS操作DOM（top属性）进行滚动到对应歌词的位置
-  歌词超出长度折行后导致歌词高度不同，如何计算高度：
-    获取到当前句歌词和上一句歌词的DOM元素，获取他们的高度再操作DOM进行滚动（两个DOM元素高度的一半之和再加外边距）
-  滑屏时显示播放按钮、横线和当前滑动到的歌词对应的时间
-    1、在touchmove事件里控制横线的显示
-    2、根据横线和每句歌词的相对位置（此处获取横线和每句歌词距离屏幕的y距离），
-      如果某句歌词的y小于横线的y并且下一句歌词的y大于横线的y，那么就获取该句歌词对应的时间显示出来
-    3、touchend时延迟取消显示，并将该计时器id保存下来，下次进入touchmove时取消未执行的计时器
-  touchmove导致top定位失准
+  功能：
+    1、歌词滚动：
+      1、监听audio元素上的timeupdate事件，实时获取当前时间
+      2、v-for遍历歌词（带有对应时间），歌词首次onUpdated的时候计算出每句歌词对应的scrollTop(该属性在touchmove事件下不会失效，而top属性会失效)滚动距离，放在数组中
+      3、watch监听当前时间并与每句歌词对应的时间进行对比，使用JS操作DOM（scrollTop属性）进行滚动到对应歌词的位置
+    2、滑屏时停止歌词自动滚动并显示播放按钮、横线和当前滑动到的歌词对应的时间
+      1、touchmove事件触发时watch监听时间进行歌词滚动的行为暂停
+      2、在touchmove事件里控制横线的显示
+      3、根据横线和每句歌词的相对位置（此处获取横线和每句歌词距离屏幕的y距离），
+        如果某句歌词的y小于横线的y并且下一句歌词的y大于横线的y，那么就获取该句歌词对应的时间显示出来
+      4、touchend时延迟取消显示，并将该计时器id保存下来，下次进入touchmove时取消未执行的计时器
+    3、滑屏结束时点击播放按钮跳转到所滑到的位置
+      改变时间即可（watch会监听到时间变化进行自动跳转）
+    4、滑屏结束不点击播放按钮1s后自动回到播放位置
+      自动（touchmove事件结束后watch继续监听）
+  bugs：    
+    歌词超出长度折行后导致歌词高度不同，如何计算高度：
+      获取到当前句歌词和上一句歌词的DOM元素，获取他们的高度再操作DOM进行滚动（两个DOM元素高度的一半之和再加外边距）
+    touchmove导致top定位失准
+      使用scrollTop代替top
+    
 */ 
 </script>
 
@@ -158,23 +166,19 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: relative;
+    scroll-behavior: smooth;
   }
-  p{
-    margin: 6px;
-  }
-  .lyricsWordsContainer{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: absolute;
-    top: 50%;
-    transition: top 0.5s;
+  .blank{
+    width: 100%;
+    height: 65px;
+    flex-shrink: 0;
   }
   .active{
     color: red;
   }
   p{
+    margin: 6px;
+    font-size: 15px;
     word-break: break-all;
     max-width: 250px;
     text-align: center;
@@ -187,6 +191,9 @@ export default {
     display: flex;
     align-items: center;
   }
+  .name{
+    font-size: 18px;
+  }
   .centerLine{
     width: 80%;
     margin: 0 10px;
@@ -194,5 +201,8 @@ export default {
     background-color: gray;
     opacity: 0.5;
     z-index: -1;
+  }
+  .time{
+    font-size: 12px;
   }
 </style>
