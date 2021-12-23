@@ -75,10 +75,10 @@ export default {
       if(touchmove.value) return;   //如果在播放时进行滑动，那么暂停对时间的监视；如果是停止滑动，那么回到当前歌词所在位置
       //监听时间，使歌词滚动
       //此处可以优化，  当前已经记录下了当前歌词的索引，下次只要判断当前索引的下一句即可，不用全部遍历
-      console.log('touchmove变化');
+      // console.log('touchmove变化');
       lyricsTimes.forEach((i, index) => {
         if(i <= props.currentTime && (lyricsTimes[index + 1]>props.currentTime || index + 1 === lyricsTimes.length /* 如果是最后一句歌词 */)){
-          if(nIndex.value === index) return;    //如果该句歌词和上一句歌词一样则返回
+          // if(nIndex.value === index) return;    //如果该句歌词和上一句歌词一样则返回，但是会产生如果是暂停情况下，nIndex始终等于index从而无法回到原位置
           proxy.$refs.a.scrollTop = lyricsTop[index + 1];
           nIndex.value = index    //更新当前歌词索引
         }
@@ -86,9 +86,12 @@ export default {
     })
     onMounted(() => {
       //歌词拖动
-      proxy.$refs.a.addEventListener('touchmove', throttle(100, () => {   //使用节流节省性能
+      proxy.$refs.a.addEventListener('touchmove', () => {   //此处不能使用节流节省性能，因为如果用户最后是快速放开触发了惯性滚动的话，
+                                                            //由于touchmove事件在最后触发，又因为节流产生延迟，所以会出现手指放开touchend事件发生后再触发touchmove事件，清除定时器从而出现问题
+                                                            //而如果是最后没有触发惯性滚动，因为手指在离开屏幕前一段时间内就已经停止了touchmove，所以不会产生touchmove延时触发的现象
+                                                            //说到底是手指最后触发touchmove和touchend的时间间隔是否大于了节流的时间，若小于就会出现该问题
         //如果拖动时存在未执行的定时器，那么清除他们
-        console.log('touchmove');
+        // console.log('touchmove');
         if(timer.length !== 0){
           timer.forEach(i => {
             clearTimeout(i)
@@ -107,14 +110,14 @@ export default {
             touchMoveLyricsIndex.value = index + 1;
           }
         })
-      }));
+      });
       //滑动事件结束时，启动定时器延时隐藏元素
       proxy.$refs.a.addEventListener('touchend', (e) => {
-        console.log('touchend');
+        // console.log('touchend');
         timer.push(setTimeout(() => {
           touchmove.value = false
           timer.length = 0;
-        }, 5000))
+        }, 2000))
       });
     })
     onUpdated(() => {
@@ -157,7 +160,13 @@ export default {
       获取到当前句歌词和上一句歌词的DOM元素，获取他们的高度再操作DOM进行滚动（两个DOM元素高度的一半之和再加外边距）
     touchmove导致top定位失准
       使用scrollTop代替top
-    惯性滚动再次触发了touchmove事件导致定时器被清除，但是停止时不会触发touchend事件，所以无法触发定时器
+    如果最后用户手指快速离开屏幕出现惯性滚动时，会出现由于对touchmove事件进行了节流导致其在touchend事件后延迟触发，导致定时器被清除
+      取消节流
+    维护当前高亮歌词nIndex和index，判断其是否相等，若相等则无需操作DOM用以提高性能，但是会出现滑动结束后需要回位时，若歌词还是停留在原句，则无法回位
+      取消该行为
+    防止惯性滚动时就回位
+      将touchend定时器的延迟设的长一些
+
     
 */ 
 </script>
