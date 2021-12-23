@@ -71,10 +71,11 @@ export default {
           preScrollTop = newScrollTop;
       })
     }
-    watch(() => props.currentTime, () => {
-      if(touchmove.value) return;   //如果在播放时进行滑动，那么暂停对时间的监视
+    watch([() => props.currentTime, touchmove], () => {
+      if(touchmove.value) return;   //如果在播放时进行滑动，那么暂停对时间的监视；如果是停止滑动，那么回到当前歌词所在位置
       //监听时间，使歌词滚动
       //此处可以优化，  当前已经记录下了当前歌词的索引，下次只要判断当前索引的下一句即可，不用全部遍历
+      console.log('touchmove变化');
       lyricsTimes.forEach((i, index) => {
         if(i <= props.currentTime && (lyricsTimes[index + 1]>props.currentTime || index + 1 === lyricsTimes.length /* 如果是最后一句歌词 */)){
           if(nIndex.value === index) return;    //如果该句歌词和上一句歌词一样则返回
@@ -87,6 +88,7 @@ export default {
       //歌词拖动
       proxy.$refs.a.addEventListener('touchmove', throttle(100, () => {   //使用节流节省性能
         //如果拖动时存在未执行的定时器，那么清除他们
+        console.log('touchmove');
         if(timer.length !== 0){
           timer.forEach(i => {
             clearTimeout(i)
@@ -107,11 +109,12 @@ export default {
         })
       }));
       //滑动事件结束时，启动定时器延时隐藏元素
-      proxy.$refs.a.addEventListener('touchend', () => {
+      proxy.$refs.a.addEventListener('touchend', (e) => {
+        console.log('touchend');
         timer.push(setTimeout(() => {
           touchmove.value = false
           timer.length = 0;
-        }, 1000))
+        }, 5000))
       });
     })
     onUpdated(() => {
@@ -148,12 +151,13 @@ export default {
     3、滑屏结束时点击播放按钮跳转到所滑到的位置
       改变时间即可（watch会监听到时间变化进行自动跳转）
     4、滑屏结束不点击播放按钮1s后自动回到播放位置
-      自动（touchmove事件结束后watch继续监听）
+      监听touchmove属性，当它发生变化且当前状态为false时将歌词滚动到对应位置
   bugs：    
     歌词超出长度折行后导致歌词高度不同，如何计算高度：
       获取到当前句歌词和上一句歌词的DOM元素，获取他们的高度再操作DOM进行滚动（两个DOM元素高度的一半之和再加外边距）
     touchmove导致top定位失准
       使用scrollTop代替top
+    惯性滚动再次触发了touchmove事件导致定时器被清除，但是停止时不会触发touchend事件，所以无法触发定时器
     
 */ 
 </script>
