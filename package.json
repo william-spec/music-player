@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "lyricsui": "vue-cli-service build --target lib ./src/lyricsUI/index.js --dest lyricsUI --name lyricsUI"
   },
   "dependencies": {
     "amfe-flexible": "^2.2.1",
