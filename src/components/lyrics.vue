@@ -6,7 +6,7 @@
       <div class="time">{{touchMoveTime}}</div>
     </div>
     <div class="blank"></div>
-    <p v-for="(value, index) in [1, 2, 3]" :key="index">{{value}}</p>
+    <!-- <p v-for="(value, index) in [1, 2, 3]" :key="index">{{value}}</p> -->
     <p v-for="(value, index) in lyricsWords" :key="index" :class="{active: index === nIndex}" class="p">{{value}}</p>
     <div class="blank"></div>
   </div>
@@ -14,14 +14,12 @@
 
 <script>
 import { onMounted, onUpdated, reactive, ref, watch } from '@vue/runtime-core'
-import {getLyrics} from '../axios/request'
 import {secToMinSec} from '../utils/timeFormat.js'
 export default {
   name: 'Lyrics',
   props: ['lyricsTimes', 'currentTime', 'lyricsWords'],
-  setup(props){
+  setup(props, context){
     let a = ref();
-    let lyrics = reactive({});    //键为时间，值为歌词
     let lyricsTimes = props.lyricsTimes;   //只保存时间
     let lyricsWords = props.lyricsWords;   //只保存歌词
     let lyricsTop = reactive([]);   //每句歌词对应的位置，第一句歌词从下标为1开始
@@ -109,11 +107,10 @@ export default {
         getLyricsScrollTop();
     })
     let changeTime = () => {
-      proxy.$emit('changeTime', touchMoveTime.value)
+      context.emit('changeTime', touchMoveTime.value)
       touchmove.value = false;
     }
     return {
-      lyrics,
       lyricsWords,
       nIndex,
       touchmove,
@@ -153,7 +150,7 @@ export default {
       将touchend定时器的延迟设的长一些
   打包后出现的问题：
     getCurrentInstance在生产环境下与开发环境下不同，生产环境下无法获取到实例
-      原先使用proxy.refs获取子元素，现在直接使用ref并return出去即可获取
+      原先使用proxy.refs获取子元素，现在直接使用ref并return出去即可获取，context.emit参数替代proxy.$emit
 
     
 */ 
@@ -169,6 +166,7 @@ export default {
     align-items: center;
     scroll-behavior: smooth;
   }
+  .lyricsContainer::-webkit-scrollbar {display:none}  /*隐藏滚动条*/
   .blank{
     width: 100%;
     height: 65px;

@@ -25,6 +25,6 @@ app.use(Icon);
 app.use(Grid);
 app.use(GridItem);
 app.use(Search);
-app.use(Lyrics);
+app.use(Lyrics);    //注册打包后的组件
 app.config.globalProperties.$axios=axios
 app.mount('#app')
