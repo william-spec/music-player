@@ -6,6 +6,7 @@
       <div class="time">{{touchMoveTime}}</div>
     </div>
     <div class="blank"></div>
+    <p v-for="(value, index) in [1, 2, 3]" :key="index">{{value}}</p>
     <p v-for="(value, index) in lyricsWords" :key="index" :class="{active: index === nIndex}" class="p">{{value}}</p>
     <div class="blank"></div>
   </div>
@@ -17,12 +18,12 @@ import {getLyrics} from '../axios/request'
 import {secToMinSec} from '../utils/timeFormat.js'
 export default {
   name: 'Lyrics',
-  props: ['id', 'currentTime'],
+  props: ['lyricsTimes', 'currentTime', 'lyricsWords'],
   setup(props){
     let a = ref();
     let lyrics = reactive({});    //键为时间，值为歌词
-    let lyricsTimes = reactive([]);   //只保存时间
-    let lyricsWords = reactive([]);   //只保存歌词
+    let lyricsTimes = props.lyricsTimes;   //只保存时间
+    let lyricsWords = props.lyricsWords;   //只保存歌词
     let lyricsTop = reactive([]);   //每句歌词对应的位置，第一句歌词从下标为1开始
     let lyricsTopComputedTimes = ref(0);  //表示歌词位置的计算次数，只需要计算一次
     let nIndex = ref();   //当前歌词索引
@@ -30,24 +31,7 @@ export default {
     let touchMoveTime = ref()   //滑动位置所对应的时间
     let touchMoveLyricsIndex = ref()   //滑动到的那句歌词的索引
     let timer = reactive([])    //存放计时器，touchend时延迟取消显示使用到计时器，如果此时又进行拖动，就需要取消计时器
-    //解析歌词
-    getLyrics(props.id).then(res => {
-      let str = res.data.lrc.lyric;
-      let t = str.split('\n');
-      t.map(item => {
-        let res = item.match(/^\[(.*)\:(.*)\.(.*)\](.*)/);
-        if(res === null)return;
-        let min = Number(res[1]);
-        let sec = Number(res[2]);
-        let ms = Number(res[3]);
-        let words = res[4];
-        if(words === '')return;
-        res = min * 60 + sec + ms / 1000;
-        lyrics[res] = words;
-        lyricsWords.push(words)
-        lyricsTimes.push(res);
-      })
-    })
+    
     //计算歌词高度，滚动距离由当前句歌词和上一句歌词的高度决定
     let getLyricsScrollTop = () => {
       lyricsTopComputedTimes.value ++;  //记录歌词位置的计算次数，只需要计算一次即可，否则onUpdated中会重复计算
@@ -79,14 +63,12 @@ export default {
       lyricsTimes.forEach((i, index) => {
         if(i <= props.currentTime && (lyricsTimes[index + 1]>props.currentTime || index + 1 === lyricsTimes.length /* 如果是最后一句歌词 */)){
           // if(nIndex.value === index) return;    //如果该句歌词和上一句歌词一样则返回，但是会产生如果是暂停情况下，nIndex始终等于index从而无法回到原位置
-          a.value.scrollTop = lyricsTop[index + 1];
+          a.value.scrollTop = lyricsTop[index + 1];   //lyricsTop第一项为初始位置，从1开始才是歌词对应的位置，所以要加1
           nIndex.value = index    //更新当前歌词索引
         }
       })
     })
     onMounted(() => {
-      console.log('123');
-      console.log(lyricsWords);
       //歌词拖动
       a.value.addEventListener('touchmove', () => {   //此处不能使用节流节省性能，因为如果用户最后是快速放开触发了惯性滚动的话，
                                                             //由于touchmove事件在最后触发，又因为节流产生延迟，所以会出现手指放开touchend事件发生后再触发touchmove事件，清除定时器从而出现问题

@@ -12,7 +12,7 @@
       <p class="name">{{songDetail.name}}</p>
       <p>{{songDetail.author}}</p>
       <div class="lyrics">
-        <lyrics :id="songDetail.id" :currentTime ="currentTime" @changeTime='changeTime'/>
+        <lyrics :lyricsWords="lyricsWords" :lyricsTimes="lyricsTimes" :currentTime ="currentTime" @changeTime='changeTime'/>
       </div>
     </div>
     <audio controls ref="audio" :src="songDetail.url" ></audio>
@@ -23,7 +23,8 @@
 import { getCurrentInstance, onMounted, onBeforeUnmount, reactive, ref } from '@vue/runtime-core'
 import lyrics from '../components/lyrics.vue'
 import { getSongUrl,
-         getSongDetail
+         getSongDetail,
+         getLyrics
         } from '../axios/request'
 import {MinSecToSec} from '../utils/timeFormat.js'
 export default {
@@ -37,6 +38,8 @@ export default {
       name: '',
       author: ''
     })
+    let lyricsWords = reactive([]);
+    let lyricsTimes = reactive([]);
     getSongUrl(songDetail.id).then(res => {
       songDetail.url = res.data.data[0].url
     })
@@ -45,6 +48,24 @@ export default {
       songDetail.name = res.data.songs[0].name;
       songDetail.author = res.data.songs[0].ar[0].name;
     })
+    //解析歌词
+    getLyrics(songDetail.id).then(res => {
+      let str = res.data.lrc.lyric;
+      let t = str.split('\n');
+      t.map(item => {
+        let res = item.match(/^\[(.*)\:(.*)\.(.*)\](.*)/);
+        if(res === null)return;
+        let min = Number(res[1]);
+        let sec = Number(res[2]);
+        let ms = Number(res[3]);
+        let words = res[4];
+        if(words === '')return;
+        res = min * 60 + sec + ms / 1000;
+        lyricsWords.push(words)
+        lyricsTimes.push(res);
+      })
+    })
+    
     let onClickLeft = () => {
       proxy.$router.back();
     }
@@ -72,7 +93,9 @@ export default {
       songDetail,
       currentTime,
       onClickLeft,
-      changeTime
+      changeTime,
+      lyricsTimes,
+      lyricsWords
     }
   },
   components: {
