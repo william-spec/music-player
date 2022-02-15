@@ -10,7 +10,7 @@
 import { createApp } from 'vue'
 
 import Lyrics from 'lyricsui'
-import 'lyricsui/style/lyricsui.css'
+import 'lyricsui/style/lyricsUI.css'
 
 createApp(App).use(Lyrics).mount('#app')
 ```

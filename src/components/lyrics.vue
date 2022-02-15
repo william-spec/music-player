@@ -1,14 +1,16 @@
 <template>
-  <div class="lyricsContainer" ref="a">
-    <div class="center" v-show="touchmove" >
-      <van-icon name="play" class="name" @click="changeTime"/>
-      <div class="centerLine"></div>
-      <div class="time">{{touchMoveTime}}</div>
+  <div class="lyrics">
+    <div class="lyricsContainer" ref="a">
+      <div class="center" v-show="touchmove" >
+        <van-icon name="play" class="name" @click="changeTime"/>
+        <div class="centerLine"></div>
+        <div class="time">{{touchMoveTime}}</div>
+      </div>
+      <div class="blank"></div>
+      <!-- <p v-for="(value, index) in [1, 2, 3]" :key="index">{{value}}</p> -->
+      <p v-for="(value, index) in lyricsWords" :key="index" :class="{active: index === nIndex}" class="p">{{value}}</p>
+      <div class="blank"></div>
     </div>
-    <div class="blank"></div>
-    <!-- <p v-for="(value, index) in [1, 2, 3]" :key="index">{{value}}</p> -->
-    <p v-for="(value, index) in lyricsWords" :key="index" :class="{active: index === nIndex}" class="p">{{value}}</p>
-    <div class="blank"></div>
   </div>
 </template>
 
@@ -154,6 +156,14 @@ export default {
 </script>
 
 <style scoped>
+  .lyrics{
+    width: 340px;
+    height: 130px;
+    background-color: white;
+    opacity: 0.5;
+    margin-top: 20px;
+    border-radius: 70px;
+  }
   .lyricsContainer{
     width: 100%;
     height: 100%;

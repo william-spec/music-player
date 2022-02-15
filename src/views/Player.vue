@@ -11,9 +11,9 @@
       <img :src="songDetail.img" alt="歌曲封面">
       <p class="name">{{songDetail.name}}</p>
       <p>{{songDetail.author}}</p>
-      <div class="lyrics">
+      <!-- <div class="lyrics"> -->
         <Lyrics :lyricsWords="lyricsWords" :lyricsTimes="lyricsTimes" :currentTime ="currentTime" @changeTime='changeTime'/>
-      </div>
+      <!-- </div> -->
     </div>
     <audio controls ref="audio" :src="songDetail.url" ></audio>
   </div>
@@ -142,12 +142,12 @@ export default {
     justify-content: center;
     align-items: center;
   }
-  .lyrics{
+  /* .lyrics{
     width: 340px;
     height: 130px;
     background-color: white;
     opacity: 0.5;
     margin-top: 20px;
     border-radius: 70px;
-  }
+  } */
 </style>
