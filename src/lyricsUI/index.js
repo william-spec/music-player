@@ -1,4 +1,4 @@
-import lyrics from '../components/lyrics'
+import lyrics from './lyrics'
 
 const install = (app) => {
     app.component(lyrics.name, lyrics)
