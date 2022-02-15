@@ -13,6 +13,7 @@
     "axios": "^0.24.0",
     "core-js": "^3.6.5",
     "less-loader": "^6.0.0",
+    "lyricsui": "^1.1.1",
     "moment": "^2.29.1",
     "postcss": "^8.4.4",
     "postcss-pxtorem": "^5.1.1",

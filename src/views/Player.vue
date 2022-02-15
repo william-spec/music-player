@@ -12,7 +12,7 @@
       <p class="name">{{songDetail.name}}</p>
       <p>{{songDetail.author}}</p>
       <div class="lyrics">
-        <lyrics :lyricsWords="lyricsWords" :lyricsTimes="lyricsTimes" :currentTime ="currentTime" @changeTime='changeTime'/>
+        <Lyrics :lyricsWords="lyricsWords" :lyricsTimes="lyricsTimes" :currentTime ="currentTime" @changeTime='changeTime'/>
       </div>
     </div>
     <audio controls ref="audio" :src="songDetail.url" ></audio>

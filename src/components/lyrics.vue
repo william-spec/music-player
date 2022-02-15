@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import { onMounted, onUpdated, reactive, ref, watch } from '@vue/runtime-core'
+import { onMounted, onUpdated, reactive, ref, watch } from 'vue'
 import {secToMinSec} from '../utils/timeFormat.js'
 export default {
   name: 'Lyrics',
@@ -57,7 +57,6 @@ export default {
       if(touchmove.value) return;   //如果在播放时进行滑动，那么暂停对时间的监视；如果是停止滑动，那么回到当前歌词所在位置
       //监听时间，使歌词滚动
       //此处可以优化，  当前已经记录下了当前歌词的索引，下次只要判断当前索引的下一句即可，不用全部遍历
-      // console.log('touchmove变化');
       lyricsTimes.forEach((i, index) => {
         if(i <= props.currentTime && (lyricsTimes[index + 1]>props.currentTime || index + 1 === lyricsTimes.length /* 如果是最后一句歌词 */)){
           // if(nIndex.value === index) return;    //如果该句歌词和上一句歌词一样则返回，但是会产生如果是暂停情况下，nIndex始终等于index从而无法回到原位置
@@ -73,7 +72,6 @@ export default {
                                                             //而如果是最后没有触发惯性滚动，因为手指在离开屏幕前一段时间内就已经停止了touchmove，所以不会产生touchmove延时触发的现象
                                                             //说到底是手指最后触发touchmove和touchend的时间间隔是否大于了节流的时间，若小于就会出现该问题
         //如果拖动时存在未执行的定时器，那么清除他们
-        // console.log('touchmove');
         if(timer.length !== 0){
           timer.forEach(i => {
             clearTimeout(i)
@@ -95,7 +93,6 @@ export default {
       });
       //滑动事件结束时，启动定时器延时隐藏元素
       a.value.addEventListener('touchend', (e) => {
-        // console.log('touchend');
         timer.push(setTimeout(() => {
           touchmove.value = false
           timer.length = 0;
@@ -118,7 +115,7 @@ export default {
       changeTime,
       a
     }
-  }
+  },
 }
 /* 
 歌词滚动组件

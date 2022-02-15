@@ -7,8 +7,9 @@ import { Tab, Tabs, Dialog, Form, Field, CellGroup,
   Button, Toast, NavBar, Icon, Grid, GridItem, Search } from 'vant'
 import axios from 'axios'
 import 'amfe-flexible'    //根据不同设备可以改变html元素的fontSize属性
-import Lyrics from '../lyricsUI/lyricsUI.common'
-import '../lyricsUI/lyricsUI.css'
+import Lyrics from 'lyricsui'
+// import Lyrics from '../lyricsUI/lyricsUI.umd.min'
+import 'lyricsui/style/lyricsui.css'
 
 
 const app = createApp(App).use(store).use(router)

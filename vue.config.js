@@ -14,5 +14,9 @@ module.exports = {
         }
       }
     }
-  }
+  },
+  // configureWebpack: (config) => {
+  // 	// 不取消console打印    
+  //   config.optimization.minimizer[0].options.terserOptions.compress.drop_console = false;
+  // }
 }
