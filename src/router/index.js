@@ -56,9 +56,6 @@ const routes = [
     path: '/detail/:id',
     name: 'Detail',
     component: () => import('../views/Detail.vue'),
-    meta: {
-      keepAlive: false
-    }
   },
   {
     path: '/more/:type',
