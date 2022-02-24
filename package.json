@@ -6,9 +6,13 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "lyricsui": "vue-cli-service build --target lib ./src/lyricsUI/index.js --dest lyricsUIPackage --name lyricsUI"
+    "lyricsui": "vue-cli-service build --target lib ./src/lyricsUI/index.js --dest lyricsUIPackage --name lyricsUI",
+    "lyricsui:rollup": "rollup -c"
   },
   "dependencies": {
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-image": "^2.1.1",
     "amfe-flexible": "^2.2.1",
     "axios": "^0.24.0",
     "core-js": "^3.6.5",
@@ -17,6 +21,8 @@
     "moment": "^2.29.1",
     "postcss": "^8.4.4",
     "postcss-pxtorem": "^5.1.1",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-vue": "^6.0.0",
     "throttle-debounce": "^3.0.1",
     "vant": "^3.3.0",
     "vue": "^3.0.0",

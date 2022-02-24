@@ -147,9 +147,10 @@ export default {
       取消该行为
     防止惯性滚动时就回位
       将touchend定时器的延迟设的长一些
-  打包后出现的问题：
-    getCurrentInstance在生产环境下与开发环境下不同，生产环境下无法获取到实例
-      原先使用proxy.refs获取子元素，现在直接使用ref并return出去即可获取，context.emit参数替代proxy.$emit
+    打包后出现的问题：
+      见CSDN文章
+    打包优化：
+      将三方库使用external不打包到最后文件中，减小打包后的体积
 
     
 */ 
